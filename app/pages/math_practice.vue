@@ -33,8 +33,6 @@
             <UTable :columns="columnsIncorrect" :rows="rowsIncorrect" />
             <h3 class="mt-6 text-lg font-semibold">Time for Each Correct Answer</h3>
             <UTable :columns="columnsTime" :rows="rowsTime" />
-            <h3 class="mt-6 text-lg font-semibold">End Digit Counts for Incorrect Answers</h3>
-            <UTable :columns="columnsEndDigit" :rows="rowsEndDigit" />
           </div>
         </div>
       </div>
@@ -71,9 +69,7 @@ const attemptsArray = ref(Array.from({ length: 10 }, () => []));
 
 // Array to track time for each correct answer
 const correctTimes = ref(Array(10).fill(null));
-
-// Array to store incorrect answers' end digits
-const incorrectEndDigits = ref<number[]>([]);
+const lastCorrectTime = ref(startTime); // Tracks the last correct answer time
 
 // Computed property for total attempts
 const totalAttempts = computed(() => {
@@ -122,15 +118,6 @@ const columnsTime = ref([
 // Rows for the time tracking table
 const rowsTime = ref([]);
 
-// Define the columns for the end digit counts table
-const columnsEndDigit = ref([
-  { key: 'endDigit', label: 'End Digit' },
-  { key: 'count', label: 'Count' },
-]);
-
-// Rows for the end digit counts table
-const rowsEndDigit = ref([]);
-
 // Function to calculate rows for the incorrect attempts table
 const calculateIncorrectTableRows = () => {
   rowsIncorrect.value = summary.value
@@ -157,19 +144,6 @@ const calculateTimeTableRows = () => {
     .filter((row) => row !== null);
 };
 
-// Function to calculate rows for the end digit counts table
-const calculateEndDigitTableRows = () => {
-  const endDigitCounts = incorrectEndDigits.value.reduce((counts, digit) => {
-    counts[digit] = (counts[digit] || 0) + 1;
-    return counts;
-  }, {});
-
-  rowsEndDigit.value = Object.entries(endDigitCounts).map(([digit, count]) => ({
-    endDigit: digit,
-    count,
-  }));
-};
-
 // Watcher to update the incorrect attempts table
 watch(
   () => attemptsArray.value,
@@ -184,15 +158,6 @@ watch(
   () => correctTimes.value,
   () => {
     calculateTimeTableRows();
-  },
-  { deep: true }
-);
-
-// Watcher to update the end digit counts table
-watch(
-  () => incorrectEndDigits.value,
-  () => {
-    calculateEndDigitTableRows();
   },
   { deep: true }
 );
@@ -213,7 +178,12 @@ const checkAnswer = async (index: number) => {
     // Record the time for the correct answer
     const currentTime = Date.now();
     if (!correctTimes.value[index] && startTime) {
-      correctTimes.value[index] = (currentTime - startTime) / 1000;
+      if (lastCorrectTime.value) {
+        correctTimes.value[index] = (currentTime - lastCorrectTime.value) / 1000; // Time since last correct answer
+      } else {
+        correctTimes.value[index] = (currentTime - startTime) / 1000; // Time since quiz started
+      }
+      lastCorrectTime.value = currentTime; // Update the last correct time
     }
 
     // Check if this is the last input
@@ -231,10 +201,6 @@ const checkAnswer = async (index: number) => {
       }
     }
   } else {
-    // Record the end digit of the incorrect answer
-    const endDigit = userValue % 10;
-    incorrectEndDigits.value.push(endDigit);
-
     // Clear the input field
     userInputs.value[index] = '';
     // Refocus on the same input field
@@ -253,6 +219,7 @@ const checkAnswer = async (index: number) => {
 const startTimer = () => {
   if (!timerRunning.value) {
     startTime = Date.now();
+    lastCorrectTime.value = startTime; // Initialize the last correct time with start time
     timerRunning.value = true;
   }
 };
