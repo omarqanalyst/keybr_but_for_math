@@ -11,7 +11,7 @@
               :key="index"
               class="flex items-center justify-between mt-2"
             >
-              <p class="mr-4">{{ array1[index] }} + {{ array2[index] }} = </p>
+              <p class="mr-4">{{ firstNumber[index] }} + {{ secondNumber[index] }} = </p>
               <UInput
                 v-model="userInputs[index]"
                 class="w-16"
@@ -33,6 +33,44 @@
             <UTable :columns="columnsIncorrect" :rows="rowsIncorrect" />
             <h3 class="mt-6 text-lg font-semibold">Time for Each Correct Answer</h3>
             <UTable :columns="columnsTime" :rows="rowsTime" />
+
+            <h3 class="mt-6 text-lg font-semibold">Progress Report</h3>
+            <table class="table-auto border-collapse border border-gray-500">
+              <thead>
+                <tr>
+                  <th class="border border-gray-500 px-4 py-2">First Number</th>
+                  <th class="border border-gray-500 px-4 py-2">Second Number</th>
+                  <th class="border border-gray-500 px-4 py-2">Correct Answer</th>
+                  <th class="border border-gray-500 px-4 py-2">Incorrect Attempts</th>
+                  <th class="border border-gray-500 px-4 py-2">Is Correct</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, index) in dataframe" :key="index">
+                  <td class="border border-gray-500 px-4 py-2">{{ row.firstNumber }}</td>
+                  <td class="border border-gray-500 px-4 py-2">{{ row.secondNumber }}</td>
+                  <td class="border border-gray-500 px-4 py-2">{{ row.correctAnswer }}</td>
+                  <td class="border border-gray-500 px-4 py-2">{{ row.incorrectAttempts }}</td>
+                  <td class="border border-gray-500 px-4 py-2">{{ row.isCorrect }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h3 class="mt-6 text-lg font-semibold">Incorrect Questions: Unique Ones Digits</h3>
+            <table class="table-auto border-collapse border border-gray-500 mt-4">
+              <thead>
+                <tr>
+                  <th class="border border-gray-500 px-4 py-2">Unique Ones Digit</th>
+                  <th class="border border-gray-500 px-4 py-2">Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, index) in uniqueOnesDigitsWithCounts" :key="index">
+                  <td class="border border-gray-500 px-4 py-2 text-center">{{ row.digit }}</td>
+                  <td class="border border-gray-500 px-4 py-2 text-center">{{ row.count }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -44,11 +82,11 @@
 import { ref, nextTick, computed, watch } from 'vue';
 
 // Generate two arrays of random digits
-const array1 = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
-const array2 = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+const firstNumber = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+const secondNumber = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
 
 // Generate a third array as the sum of the first two
-const sumArray = array1.map((num, index) => num + array2[index]);
+const sumArray = firstNumber.map((num, index) => num + secondNumber[index]);
 
 // Create an array of user inputs for each sum
 const userInputs = ref(Array(10).fill(''));
@@ -87,7 +125,7 @@ const summary = computed(() => {
   return attemptsArray.value.map((attempts, index) => {
     const correctAnswer = sumArray[index];
     return {
-      question: `${array1[index]} + ${array2[index]}`,
+      question: `${firstNumber[index]} + ${secondNumber[index]}`,
       correctAnswer: correctAnswer,
       attempts: attempts,
       attemptsCount: attempts.length,
@@ -139,7 +177,7 @@ const calculateTimeTableRows = () => {
     .map((time, index) => {
       if (time !== null) {
         return {
-          question: `${array1[index]} + ${array2[index]}`,
+          question: `${firstNumber[index]} + ${secondNumber[index]}`,
           timeTaken: time.toFixed(2),
         };
       }
@@ -218,6 +256,71 @@ const checkAnswer = async (index: number) => {
     }
   }
 };
+
+const dataframe = computed(() => {
+  return firstNumber.map((value1, index) => {
+    const value2 = secondNumber[index];
+    const correctAnswer = sumArray[index];
+    const allAttempts = attemptsArray.value[index];
+
+    // Filter out incorrect attempts
+    const incorrectAttemptsArray = allAttempts.filter((attempt) => attempt !== correctAnswer);
+
+    // Join incorrect attempts into a string
+    const incorrectAttempts = incorrectAttemptsArray.join(', ');
+
+    // Set isCorrect: 1 if no incorrect attempts, else 0
+    const isCorrect = incorrectAttemptsArray.length === 0 ? 1 : 0;
+
+    return {
+      firstNumber: value1,
+      secondNumber: value2,
+      correctAnswer: correctAnswer,
+      incorrectAttempts: incorrectAttempts,
+      isCorrect: isCorrect,
+    };
+  });
+});
+
+const failedQuestions = computed(() => {
+  return dataframe.value
+    .filter((row) => row.isCorrect === 0)
+    .map((row) => ({
+      firstNumber: row.firstNumber,
+      secondNumber: row.secondNumber,
+    }));
+});
+
+const uniqueOnesDigitsWithCounts = computed(() => {
+  const digitCounts = {};
+
+  failedQuestions.value.forEach((question) => {
+    const lastDigitFirstNumber = question.firstNumber % 10;
+    const lastDigitSecondNumber = question.secondNumber % 10;
+
+    // If last digits are the same, count only once
+    if (lastDigitFirstNumber === lastDigitSecondNumber) {
+      digitCounts[lastDigitFirstNumber] = (digitCounts[lastDigitFirstNumber] || 0) + 1;
+    } else {
+      // Otherwise, count each digit separately
+      digitCounts[lastDigitFirstNumber] = (digitCounts[lastDigitFirstNumber] || 0) + 1;
+      digitCounts[lastDigitSecondNumber] = (digitCounts[lastDigitSecondNumber] || 0) + 1;
+    }
+  });
+
+  // Convert the object into an array of { digit, count }
+  return Object.entries(digitCounts).map(([digit, count]) => ({
+    digit: parseInt(digit, 10),
+    count,
+  }));
+});
+
+
+
+
+
+
+
 
 // Function to start the timer
 const startTimer = () => {
