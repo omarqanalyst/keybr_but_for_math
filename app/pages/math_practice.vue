@@ -28,7 +28,7 @@
           </div>
           <div v-if="score !== null" class="mt-6 text-center">
             <p>Your score: {{ score }} seconds</p>
-            <p>Total attempts: {{ totalAttempts }}</p>
+            <p>Total attempts: {{ totalAttempts}}</p> 
             <p>Total errors: {{ totalErrors }}</p>
             <UTable :columns="columnsIncorrect" :rows="rowsIncorrect" />
             <h3 class="mt-6 text-lg font-semibold">Time for Each Correct Answer</h3>
@@ -78,12 +78,9 @@ const totalAttempts = computed(() => {
 
 // Computed property for total errors
 const totalErrors = computed(() => {
-  return attemptsArray.value.reduce((sum, attempts, index) => {
-    const correctAnswer = sumArray[index];
-    const numErrors = attempts.filter((a) => a !== correctAnswer).length;
-    return sum + numErrors;
-  }, 0);
+  return summary.value.filter((item) => item.wasIncorrect).length;
 });
+
 
 // Computed property for summary
 const summary = computed(() => {
@@ -102,9 +99,10 @@ const summary = computed(() => {
 // Define the columns for the incorrect attempts table
 const columnsIncorrect = ref([
   { key: 'questionMissed', label: 'Question Missed' },
-  { key: 'numberOfAttempts', label: 'Number of Attempts' },
-  { key: 'attempts', label: 'Attempts' },
+  { key: 'numberOfIncorrectAttempts', label: 'Number of Incorrect Attempts' },
+  { key: 'attempts', label: 'Incorrect Attempts' },
 ]);
+
 
 // Rows for incorrect attempts table
 const rowsIncorrect = ref([]);
@@ -122,12 +120,18 @@ const rowsTime = ref([]);
 const calculateIncorrectTableRows = () => {
   rowsIncorrect.value = summary.value
     .filter((item) => item.wasIncorrect) // Only include questions with incorrect attempts
-    .map((item) => ({
-      questionMissed: item.question,
-      numberOfAttempts: item.attemptsCount,
-      attempts: item.attempts.join(', '),
-    }));
+    .map((item) => {
+      const correctAnswer = item.correctAnswer;
+      const incorrectAttempts = item.attempts.filter((attempt) => attempt !== correctAnswer); // Only incorrect attempts
+      return {
+        questionMissed: item.question,
+        numberOfIncorrectAttempts: incorrectAttempts.length, // Count of incorrect attempts
+        attempts: incorrectAttempts.join(', '), // List incorrect attempts
+      };
+    });
 };
+
+
 
 // Function to calculate rows for the time tracking table
 const calculateTimeTableRows = () => {
