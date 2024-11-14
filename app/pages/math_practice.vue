@@ -28,49 +28,20 @@
           </div>
           <div v-if="score !== null" class="mt-6 text-center">
             <p>Your score: {{ score }} seconds</p>
-            <p>Total attempts: {{ totalAttempts}}</p> 
+            <p>Total attempts: {{ totalAttempts }}</p>
             <p>Total errors: {{ totalErrors }}</p>
+
+            <h3 class="mt-6 text-lg font-semibold">Incorrect Attempts</h3>
             <UTable :columns="columnsIncorrect" :rows="rowsIncorrect" />
+
             <h3 class="mt-6 text-lg font-semibold">Time for Each Correct Answer</h3>
             <UTable :columns="columnsTime" :rows="rowsTime" />
 
             <h3 class="mt-6 text-lg font-semibold">Progress Report</h3>
-            <table class="table-auto border-collapse border border-gray-500">
-              <thead>
-                <tr>
-                  <th class="border border-gray-500 px-4 py-2">First Number</th>
-                  <th class="border border-gray-500 px-4 py-2">Second Number</th>
-                  <th class="border border-gray-500 px-4 py-2">Correct Answer</th>
-                  <th class="border border-gray-500 px-4 py-2">Incorrect Attempts</th>
-                  <th class="border border-gray-500 px-4 py-2">Is Correct</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, index) in dataframe" :key="index">
-                  <td class="border border-gray-500 px-4 py-2">{{ row.firstNumber }}</td>
-                  <td class="border border-gray-500 px-4 py-2">{{ row.secondNumber }}</td>
-                  <td class="border border-gray-500 px-4 py-2">{{ row.correctAnswer }}</td>
-                  <td class="border border-gray-500 px-4 py-2">{{ row.incorrectAttempts }}</td>
-                  <td class="border border-gray-500 px-4 py-2">{{ row.isCorrect }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <UTable :columns="columnsProgress" :rows="rowsProgress" />
 
-            <h3 class="mt-6 text-lg font-semibold">Incorrect Questions: Unique Ones Digits</h3>
-            <table class="table-auto border-collapse border border-gray-500 mt-4">
-              <thead>
-                <tr>
-                  <th class="border border-gray-500 px-4 py-2">Unique Ones Digit</th>
-                  <th class="border border-gray-500 px-4 py-2">Count</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(row, index) in uniqueOnesDigitsWithCounts" :key="index">
-                  <td class="border border-gray-500 px-4 py-2 text-center">{{ row.digit }}</td>
-                  <td class="border border-gray-500 px-4 py-2 text-center">{{ row.count }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <h6 class="mt-6 text-lg font-semibold">Incorrect Questions: Unique Ones Digits</h6>
+            <UTable :columns="columnsUniqueOnesDigits" :rows="rowsUniqueOnesDigits" />
           </div>
         </div>
       </div>
@@ -79,7 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
+// Import UTable if not globally registered
 
 // Generate two arrays of random digits
 const firstNumber = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
@@ -119,7 +91,6 @@ const totalErrors = computed(() => {
   return summary.value.filter((item) => item.wasIncorrect).length;
 });
 
-
 // Computed property for summary
 const summary = computed(() => {
   return attemptsArray.value.map((attempts, index) => {
@@ -134,44 +105,71 @@ const summary = computed(() => {
   });
 });
 
-// Define the columns for the incorrect attempts table
+// Define the columns and rows for the Incorrect Attempts table
 const columnsIncorrect = ref([
   { key: 'questionMissed', label: 'Question Missed' },
   { key: 'numberOfIncorrectAttempts', label: 'Number of Incorrect Attempts' },
   { key: 'attempts', label: 'Incorrect Attempts' },
 ]);
 
-
-// Rows for incorrect attempts table
 const rowsIncorrect = ref([]);
 
-// Define the columns for the time tracking table
+// Define the columns and rows for the Time Tracking table
 const columnsTime = ref([
   { key: 'question', label: 'Question' },
   { key: 'timeTaken', label: 'Time Taken (seconds)' },
 ]);
 
-// Rows for the time tracking table
 const rowsTime = ref([]);
 
-// Function to calculate rows for the incorrect attempts table
+// Define columns and rows for the Progress Report table
+const columnsProgress = ref([
+  { key: 'firstNumber', label: 'First Number' },
+  { key: 'secondNumber', label: 'Second Number' },
+  { key: 'correctAnswer', label: 'Correct Answer' },
+  { key: 'incorrectAttempts', label: 'Incorrect Attempts' },
+  { key: 'isCorrect', label: 'Is Correct' },
+]);
+
+const rowsProgress = computed(() =>
+  dataframe.value.map((row) => ({
+    firstNumber: row.firstNumber,
+    secondNumber: row.secondNumber,
+    correctAnswer: row.correctAnswer,
+    incorrectAttempts: row.incorrectAttempts || 'None',
+    isCorrect: row.isCorrect ? 'Yes' : 'No',
+  }))
+);
+
+// Define columns and rows for the Unique Ones Digits table
+const columnsUniqueOnesDigits = ref([
+  { key: 'digit', label: 'Unique Ones Digit' },
+  { key: 'count', label: 'Count' },
+]);
+
+const rowsUniqueOnesDigits = computed(() =>
+  uniqueOnesDigitsWithCounts.value.map((row) => ({
+    digit: row.digit,
+    count: row.count,
+  }))
+);
+
+// Function to calculate rows for the Incorrect Attempts table
 const calculateIncorrectTableRows = () => {
   rowsIncorrect.value = summary.value
-    .filter((item) => item.wasIncorrect) // Only include questions with incorrect attempts
+    .filter((item) => item.wasIncorrect)
     .map((item) => {
       const correctAnswer = item.correctAnswer;
-      const incorrectAttempts = item.attempts.filter((attempt) => attempt !== correctAnswer); // Only incorrect attempts
+      const incorrectAttempts = item.attempts.filter((attempt) => attempt !== correctAnswer);
       return {
         questionMissed: item.question,
-        numberOfIncorrectAttempts: incorrectAttempts.length, // Count of incorrect attempts
-        attempts: incorrectAttempts.join(', '), // List incorrect attempts
+        numberOfIncorrectAttempts: incorrectAttempts.length,
+        attempts: incorrectAttempts.join(', '),
       };
     });
 };
 
-
-
-// Function to calculate rows for the time tracking table
+// Function to calculate rows for the Time Tracking table
 const calculateTimeTableRows = () => {
   rowsTime.value = correctTimes.value
     .map((time, index) => {
@@ -186,7 +184,7 @@ const calculateTimeTableRows = () => {
     .filter((row) => row !== null);
 };
 
-// Watcher to update the incorrect attempts table
+// Watcher to update the Incorrect Attempts table
 watch(
   () => attemptsArray.value,
   () => {
@@ -195,7 +193,7 @@ watch(
   { deep: true }
 );
 
-// Watcher to update the time tracking table
+// Watcher to update the Time Tracking table
 watch(
   () => correctTimes.value,
   () => {
@@ -314,13 +312,6 @@ const uniqueOnesDigitsWithCounts = computed(() => {
     count,
   }));
 });
-
-
-
-
-
-
-
 
 // Function to start the timer
 const startTimer = () => {
