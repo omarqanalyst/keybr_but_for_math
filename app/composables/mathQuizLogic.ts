@@ -2,26 +2,43 @@
 import { ref, computed } from 'vue';
 
 export function useQuiz() {
-  // Generate two arrays of random digits
-  const firstNumber = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
-  const secondNumber = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
-
-  // Sum array
-  const sumArray = firstNumber.map((num, index) => num + secondNumber[index]);
+  // State variables
+  const firstNumber = ref<number[]>([]);
+  const secondNumber = ref<number[]>([]);
+  const sumArray = computed(() =>
+    firstNumber.value.map((num, index) => num + secondNumber.value[index])
+  );
 
   // User inputs and states
-  const userInputs = ref(Array(10).fill(''));
-  const inputStates = ref(Array(10).fill(''));
+  const userInputs = ref<string[]>([]);
+  const inputStates = ref<string[]>([]);
 
   // Timing and scoring
   let startTime: number | null = null;
   const timerRunning = ref(false);
-  const lastCorrectTime = ref(startTime);
+  const lastCorrectTime = ref<number | null>(null);
   const score = ref<string | null>(null);
 
   // Attempts and correct times
-  const attemptsArray = ref(Array.from({ length: 10 }, () => []));
-  const correctTimes = ref(Array(10).fill(null));
+  const attemptsArray = ref<number[][]>([]);
+  const correctTimes = ref<(number | null)[]>([]);
+
+  // Initialize function
+  const initializeQuiz = () => {
+    firstNumber.value = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+    secondNumber.value = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+    userInputs.value = Array(10).fill('');
+    inputStates.value = Array(10).fill('');
+    attemptsArray.value = Array.from({ length: 10 }, () => []);
+    correctTimes.value = Array(10).fill(null);
+    startTime = null;
+    timerRunning.value = false;
+    lastCorrectTime.value = null;
+    score.value = null;
+  };
+
+  // Call initializeQuiz when the composable is first used
+  initializeQuiz();
 
   // Start and stop timer functions
   const startTimer = () => {
@@ -44,16 +61,16 @@ export function useQuiz() {
   const checkAnswer = (index: number): boolean => {
     const userValue = parseInt(userInputs.value[index]);
     attemptsArray.value[index].push(userValue);
-    const isCorrect = userValue === sumArray[index];
+    const isCorrect = userValue === sumArray.value[index];
     inputStates.value[index] = isCorrect ? 'correct' : 'incorrect';
 
     if (isCorrect) {
       const currentTime = Date.now();
-      if (!correctTimes.value[index] && startTime) {
+      if (correctTimes.value[index] === null && startTime) {
         correctTimes.value[index] = (currentTime - (lastCorrectTime.value || startTime)) / 1000;
         lastCorrectTime.value = currentTime;
       }
-      if (index === sumArray.length - 1) {
+      if (index === sumArray.value.length - 1) {
         stopTimer();
       }
     } else {
@@ -70,7 +87,7 @@ export function useQuiz() {
   const totalErrors = computed(() =>
     attemptsArray.value.reduce(
       (errors, attempts, index) =>
-        errors + attempts.filter((a) => a !== sumArray[index]).length,
+        errors + attempts.filter((a) => a !== sumArray.value[index]).length,
       0
     )
   );
@@ -78,10 +95,10 @@ export function useQuiz() {
   // Summary and data for tables
   const summary = computed(() =>
     attemptsArray.value.map((attempts, index) => ({
-      question: `${firstNumber[index]} + ${secondNumber[index]}`,
-      correctAnswer: sumArray[index],
+      question: `${firstNumber.value[index]} + ${secondNumber.value[index]}`,
+      correctAnswer: sumArray.value[index],
       attempts,
-      wasIncorrect: attempts.some((a) => a !== sumArray[index]),
+      wasIncorrect: attempts.some((a) => a !== sumArray.value[index]),
     }))
   );
 
@@ -102,7 +119,7 @@ export function useQuiz() {
       .map((time, index) => {
         if (time !== null) {
           return {
-            question: `${firstNumber[index]} + ${secondNumber[index]}`,
+            question: `${firstNumber.value[index]} + ${secondNumber.value[index]}`,
             timeTaken: time.toFixed(2),
           };
         }
@@ -113,11 +130,11 @@ export function useQuiz() {
 
   const progressReportRows = computed(() =>
     attemptsArray.value.map((attempts, index) => {
-      const incorrectAttempts = attempts.filter((a) => a !== sumArray[index]);
+      const incorrectAttempts = attempts.filter((a) => a !== sumArray.value[index]);
       return {
-        firstNumber: firstNumber[index],
-        secondNumber: secondNumber[index],
-        correctAnswer: sumArray[index],
+        firstNumber: firstNumber.value[index],
+        secondNumber: secondNumber.value[index],
+        correctAnswer: sumArray.value[index],
         incorrectAttempts: incorrectAttempts.join(', ') || 'None',
         isCorrect: incorrectAttempts.length === 0 ? 'Yes' : 'No',
       };
@@ -140,6 +157,7 @@ export function useQuiz() {
     }));
   });
 
+  // Return all your variables and functions, including initializeQuiz
   return {
     firstNumber,
     secondNumber,
@@ -155,5 +173,6 @@ export function useQuiz() {
     timeTableRows,
     progressReportRows,
     uniqueOnesDigitsWithCounts,
+    initializeQuiz,
   };
 }

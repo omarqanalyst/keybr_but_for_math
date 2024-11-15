@@ -4,8 +4,9 @@
       <div class="flex justify-center">
         <!-- Card Container -->
         <div class="w-1/3">
-          <UPageCard title="Random Arrays with Input Validation" />
+          <UPageCard title="Start quiz"/>
           <div class="mt-4">
+            <UButton @click="refreshQuiz" class="mt-4">Refresh</UButton>
             <div
               v-for="(sum, index) in sumArray"
               :key="index"
@@ -49,9 +50,10 @@
   </UPage>
 </template>
 
+
 <script setup lang="ts">
-import { ref, nextTick } from 'vue';
-import { useQuiz } from '~/composables/mathQuizLogic';
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { mathQuizLogic } from '~/composables/mathQuizLogic';
 
 const {
   firstNumber,
@@ -68,6 +70,7 @@ const {
   timeTableRows,
   progressReportRows,
   uniqueOnesDigitsWithCounts,
+  initializeQuiz,
 } = useQuiz();
 
 const inputRefs = ref([]);
@@ -95,6 +98,33 @@ const columnsUniqueOnesDigits = [
   { key: 'digit', label: 'Unique Ones Digit' },
   { key: 'count', label: 'Count' },
 ];
+
+const refreshQuiz = () => {
+  initializeQuiz();
+  // Optionally focus the first input
+  if (inputRefs.value[0]) {
+    nextTick(() => {
+      const inputEl = inputRefs.value[0].$el.querySelector('input');
+      if (inputEl) {
+        inputEl.focus();
+      }
+    });
+  }
+};
+
+const onKeyUp = (event) => {
+  if (event.key === 'Escape') {
+    refreshQuiz();
+  }
+};
+
+onMounted(() => {
+  window.addEventListener('keyup', onKeyUp);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keyup', onKeyUp);
+});
 
 const onEnterKey = async (index: number) => {
   const isCorrect = checkAnswer(index);
