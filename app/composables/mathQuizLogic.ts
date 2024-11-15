@@ -49,13 +49,32 @@ export function useQuiz() {
     }
   };
 
-  const stopTimer = () => {
-    if (startTime) {
-      const endTime = Date.now();
-      score.value = ((endTime - startTime) / 1000).toFixed(2);
-      timerRunning.value = false;
-    }
-  };
+   // User performance data array
+   const userPerformanceData = ref([]);
+
+   const stopTimer = () => {
+     if (startTime) {
+       const endTime = Date.now();
+       score.value = ((endTime - startTime) / 1000).toFixed(2);
+       timerRunning.value = false;
+ 
+       // Collect data
+       const questionData = firstNumber.value.map((num, index) => ({
+         timeStamp: new Date().toISOString(),
+         firstNumber: num,
+         secondNumber: secondNumber.value[index],
+         timeTakenToAnswerCorrectly: correctTimes.value[index],
+         userValue: parseInt(userInputs.value[index]),
+         isCorrect: inputStates.value[index] === 'correct',
+       }));
+ 
+       // Store data locally
+       userPerformanceData.value.push({
+         totalTimeTaken: parseFloat(score.value),
+         questions: questionData,
+       });
+     }
+   };
 
   // Check answer function
   const checkAnswer = (index: number): boolean => {
@@ -174,5 +193,7 @@ export function useQuiz() {
     progressReportRows,
     uniqueOnesDigitsWithCounts,
     initializeQuiz,
+    userPerformanceData, // Return this to access it in your component
+    stopTimer,
   };
 }

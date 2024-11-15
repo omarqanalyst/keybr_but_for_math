@@ -44,6 +44,13 @@
             <h6 class="mt-6 text-lg font-semibold">Incorrect Questions: Unique Ones Digits</h6>
             <UTable :columns="columnsUniqueOnesDigits" :rows="uniqueOnesDigitsWithCounts" />
           </div>
+          <div v-if="userPerformanceData.length" class="mt-6">
+            <h3 class="text-lg font-semibold">User Progress</h3>
+            <div v-for="(quiz, quizIndex) in userPerformanceData" :key="quizIndex" class="mt-4">
+              <h4>Quiz {{ quizIndex + 1 }} - Total Time: {{ quiz.totalTimeTaken }} seconds</h4>
+              <UTable :columns="columnsUserProgress" :rows="quiz.questions" />
+            </div>
+          </div>
         </div>
       </div>
     </UPageBody>
@@ -71,9 +78,20 @@ const {
   progressReportRows,
   uniqueOnesDigitsWithCounts,
   initializeQuiz,
+  userPerformanceData,
+  stopTimer,
 } = useQuiz();
 
 const inputRefs = ref([]);
+
+const columnsUserProgress = [
+  { key: 'timeStamp', label: 'Time Stamp' },
+  { key: 'firstNumber', label: 'First Number' },
+  { key: 'secondNumber', label: 'Second Number' },
+  { key: 'userValue', label: 'Your Answer' },
+  { key: 'isCorrect', label: 'Correct?' },
+  { key: 'timeTakenToAnswerCorrectly', label: 'Time Taken (s)' },
+];
 
 const columnsIncorrect = [
   { key: 'questionMissed', label: 'Question Missed' },
@@ -129,15 +147,21 @@ onBeforeUnmount(() => {
 const onEnterKey = async (index: number) => {
   const isCorrect = checkAnswer(index);
   if (isCorrect) {
-    const nextInputComponent = inputRefs.value[index + 1];
-    if (nextInputComponent) {
-      await nextTick();
-      const inputEl = nextInputComponent.$el.querySelector('input');
-      if (inputEl) {
-        inputEl.focus();
+    if (index === sumArray.length - 1) {
+      // Last question answered correctly
+      stopTimer();
+    } else {
+      const nextInputComponent = inputRefs.value[index + 1];
+      if (nextInputComponent) {
+        await nextTick();
+        const inputEl = nextInputComponent.$el.querySelector('input');
+        if (inputEl) {
+          inputEl.focus();
+        }
       }
     }
   } else {
+    // Keep focus on the current input
     const currentInputComponent = inputRefs.value[index];
     if (currentInputComponent) {
       await nextTick();
