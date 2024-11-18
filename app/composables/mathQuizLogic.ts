@@ -7,6 +7,8 @@ export function useQuiz() {
   const numberOfDigits = ref(1); // Default to single-digit numbers
   const exactDigitCount = ref(false); // New parameter for exact digit count
   const excludeEndingZero = ref(false); // New parameter to exclude numbers ending with zero
+  const selectedEndingDigits = ref<number[]>([]); // New parameter for selected ending digits
+
 
   // State variables
   const firstNumber = ref<number[]>([]);
@@ -14,6 +16,13 @@ export function useQuiz() {
   const sumArray = computed(() =>
     firstNumber.value.map((num, index) => num + secondNumber.value[index])
   );
+
+    // Watcher to clear selectedEndingDigits when switching to single digits
+    watch(numberOfDigits, (newVal) => {
+      if (newVal === 1) {
+        selectedEndingDigits.value = [];
+      }
+    });
 
   // User inputs and states
   const userInputs = ref<string[]>([]);
@@ -33,7 +42,7 @@ export function useQuiz() {
   const initializeQuiz = () => {
     let minNumber = exactDigitCount.value
       ? Math.pow(10, numberOfDigits.value - 1)
-      : 1;
+      : 0;
     let maxNumber = Math.pow(10, numberOfDigits.value) - 1;
 
     // For single-digit numbers, ensure minNumber is 1
@@ -67,6 +76,13 @@ export function useQuiz() {
       // If excludeEndingZero is true, ensure num does not end with zero
       if (excludeEndingZero.value && num % 10 === 0) {
         continue;
+      }
+      // If selectedEndingDigits is not empty, ensure num ends with one of the selected digits
+      if (selectedEndingDigits.value.length > 0) {
+        const lastDigit = num % 10;
+        if (!selectedEndingDigits.value.includes(lastDigit)) {
+          continue;
+        }
       }
 
       numbers.push(num);
@@ -258,5 +274,6 @@ export function useQuiz() {
     numberOfDigits,
     exactDigitCount,
     excludeEndingZero,
+    selectedEndingDigits,
   };
 }

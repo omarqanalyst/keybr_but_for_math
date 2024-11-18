@@ -75,11 +75,33 @@
                 <UCheckbox v-model="exactDigitCount"/>
               </div>
 
-              <!-- New Parameter: Exclude Numbers Ending with Zero -->
-              <div class="mt-2">
-                <label class="block mt-4 mb-2">Exclude Numbers Ending with Zero</label>
-                <UCheckbox v-model="excludeEndingZero"/>
+            <!-- New Parameter: Exclude Numbers Ending with Zero -->
+            <div class="mt-2">
+              <label class="block mt-4 mb-2">Exclude Numbers Ending with Zero</label>
+              <UCheckbox
+                v-model="excludeEndingZero"
+                :disabled="selectedEndingDigits.includes(0)"
+              >
+              </UCheckbox>
+            </div>
+
+            <!-- New Parameter: Select Numbers Ending with Specific Digits -->
+            <div class="mt-4">
+              <label class="block mb-2 font-semibold">Numbers Ending With:</label>
+              <div class="grid grid-cols-5 gap-2">
+                <UCheckbox
+                  v-for="digit in endingDigitsOptions"
+                  :key="digit"
+                  :value="digit"
+                  v-model="selectedEndingDigits"
+                  :disabled="excludeEndingZero && digit === 0 || (numberOfDigits === 1 && digit === 0)"
+                  >
+                  <template #label>
+                    <span>{{ digit }}</span>
+                  </template>
+                </UCheckbox>
               </div>
+            </div>
           </UPageCard>
         </div>
       </div>
@@ -98,6 +120,7 @@ const {
   numberOfDigits,
   exactDigitCount,
   excludeEndingZero,
+  selectedEndingDigits,
   firstNumber,
   secondNumber,
   sumArray,
@@ -125,7 +148,8 @@ const digitOptions = [
   { value: 4, label: 'Thousands (1-9999)' },
 ];
 
-
+// Options for ending digits (0-9)
+const endingDigitsOptions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 const inputRefs = ref([]);
 
