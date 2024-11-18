@@ -64,9 +64,10 @@ export function useQuiz() {
          firstNumber: num,
          secondNumber: secondNumber.value[index],
          timeTakenToAnswerCorrectly: correctTimes.value[index],
-         userValue: parseInt(userInputs.value[index]),
+         userValue: summary.value[index].attempts.length === 1 ? null : summary.value[index].attempts.attempts.slice(0, -1),
          isCorrect: inputStates.value[index] === 'correct',
        }));
+
  
        // Store data locally
        userPerformanceData.value.push({
@@ -149,16 +150,33 @@ export function useQuiz() {
 
   const progressReportRows = computed(() =>
     attemptsArray.value.map((attempts, index) => {
-      const incorrectAttempts = attempts.filter((a) => a !== sumArray.value[index]);
+      // Use toRaw to unwrap the Proxy object
+      const rawAttempts = toRaw(attempts);
+  
+      const correctAnswer = sumArray.value[index];
+      const incorrectAttempts = rawAttempts.filter((a) => a !== correctAnswer);
+
+      // console.log('Attempts')
+      // console.log(attempts)
+      // console.log('rawAttempts: ', rawAttempts.join(', '))
+      // console.log('Attempts: ', attempts.join(', '))
+
+  
       return {
         firstNumber: firstNumber.value[index],
         secondNumber: secondNumber.value[index],
-        correctAnswer: sumArray.value[index],
+        correctAnswer,
+        // Display raw attempts
+        allAttempts: rawAttempts.join(', '),
+        // allAttempts: attempts.join(', '),
+        // Show incorrect attempts
         incorrectAttempts: incorrectAttempts.join(', ') || 'None',
+        // Determine correctness
         isCorrect: incorrectAttempts.length === 0 ? 'Yes' : 'No',
       };
     })
   );
+  
 
   const uniqueOnesDigitsWithCounts = computed(() => {
     const digitCounts: Record<number, number> = {};

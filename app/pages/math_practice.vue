@@ -84,14 +84,26 @@ const {
 
 const inputRefs = ref([]);
 
+// const columnsUserProgress = [
+//   { key: 'timeStamp', label: 'Time Stamp' },
+//   { key: 'firstNumber', label: 'First Number' },
+//   { key: 'secondNumber', label: 'Second Number' },
+//   { key: 'userValue', label: 'Your Answer' },
+//   { key: 'isCorrect', label: 'Correct?' },
+//   { key: 'timeTakenToAnswerCorrectly', label: 'Time Taken (s)' },
+// ];
+
 const columnsUserProgress = [
   { key: 'timeStamp', label: 'Time Stamp' },
   { key: 'firstNumber', label: 'First Number' },
   { key: 'secondNumber', label: 'Second Number' },
-  { key: 'userValue', label: 'Your Answer' },
+  { key: 'correctAnswer', label: 'Correct Answer' }, // Added to show the expected answer
+  { key: 'userValue', label: 'All Attempts' }, // New column for debugging (all user attempts)
+  { key: 'incorrectAttempts', label: 'Incorrect Attempts' }, // New column to show only incorrect answers
   { key: 'isCorrect', label: 'Correct?' },
   { key: 'timeTakenToAnswerCorrectly', label: 'Time Taken (s)' },
 ];
+
 
 const columnsIncorrect = [
   { key: 'questionMissed', label: 'Question Missed' },
