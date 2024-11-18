@@ -69,6 +69,17 @@
               <label class="block mt-4 mb-2">Maximum Digit Count:</label>
               <USelect v-model.number="numberOfDigits" :options="digitOptions" />
             </div>
+            <!-- New Parameter: Exact Digit Count -->
+            <div class="mt-4">
+                <label class="block mt-4 mb-2">Exact Digit Count</label>
+                <UCheckbox v-model="exactDigitCount"/>
+              </div>
+
+              <!-- New Parameter: Exclude Numbers Ending with Zero -->
+              <div class="mt-2">
+                <label class="block mt-4 mb-2">Exclude Numbers Ending with Zero</label>
+                <UCheckbox v-model="excludeEndingZero"/>
+              </div>
           </UPageCard>
         </div>
       </div>
@@ -85,6 +96,8 @@ import { mathQuizLogic } from '~/composables/mathQuizLogic';
 const {
   numberOfQuestions,
   numberOfDigits,
+  exactDigitCount,
+  excludeEndingZero,
   firstNumber,
   secondNumber,
   sumArray,

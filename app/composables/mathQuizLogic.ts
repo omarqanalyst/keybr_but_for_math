@@ -4,8 +4,10 @@ import { ref, computed } from 'vue';
 export function useQuiz() {
   // Reactive variables for quiz settings
   const numberOfQuestions = ref(10);
-  const numberOfDigits = ref(1); // 1 for single-digit numbers by default
-  
+  const numberOfDigits = ref(1); // Default to single-digit numbers
+  const exactDigitCount = ref(false); // New parameter for exact digit count
+  const excludeEndingZero = ref(false); // New parameter to exclude numbers ending with zero
+
   // State variables
   const firstNumber = ref<number[]>([]);
   const secondNumber = ref<number[]>([]);
@@ -29,14 +31,18 @@ export function useQuiz() {
 
   // Initialize function
   const initializeQuiz = () => {
-    const maxNumber = Math.pow(10, numberOfDigits.value) - 1;
+    let minNumber = exactDigitCount.value
+      ? Math.pow(10, numberOfDigits.value - 1)
+      : 1;
+    let maxNumber = Math.pow(10, numberOfDigits.value) - 1;
 
-    firstNumber.value = Array.from({ length: numberOfQuestions.value }, () =>
-      Math.floor(Math.random() * (maxNumber + 1))
-    );
-    secondNumber.value = Array.from({ length: numberOfQuestions.value }, () =>
-      Math.floor(Math.random() * (maxNumber + 1))
-    );
+    // For single-digit numbers, ensure minNumber is 1
+    if (numberOfDigits.value === 1) {
+      minNumber = 1;
+    }
+
+    firstNumber.value = generateNumbers(minNumber, maxNumber);
+    secondNumber.value = generateNumbers(minNumber, maxNumber);
     userInputs.value = Array(numberOfQuestions.value).fill('');
     inputStates.value = Array(numberOfQuestions.value).fill('');
     attemptsArray.value = Array.from({ length: numberOfQuestions.value }, () => []);
@@ -45,6 +51,27 @@ export function useQuiz() {
     timerRunning.value = false;
     lastCorrectTime.value = null;
     score.value = null;
+  };
+
+  // Function to generate numbers based on the parameters
+  const generateNumbers = (min: number, max: number): number[] => {
+    const numbers: number[] = [];
+    while (numbers.length < numberOfQuestions.value) {
+      let num = Math.floor(Math.random() * (max - min + 1)) + min;
+
+      // If exactDigitCount is true, ensure num has the exact number of digits
+      if (exactDigitCount.value && num.toString().length !== numberOfDigits.value) {
+        continue;
+      }
+
+      // If excludeEndingZero is true, ensure num does not end with zero
+      if (excludeEndingZero.value && num % 10 === 0) {
+        continue;
+      }
+
+      numbers.push(num);
+    }
+    return numbers;
   };
 
   // Call initializeQuiz when the composable is first used
@@ -229,5 +256,7 @@ export function useQuiz() {
     stopTimer,
     numberOfQuestions,
     numberOfDigits,
+    exactDigitCount,
+    excludeEndingZero,
   };
 }
