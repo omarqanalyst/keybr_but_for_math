@@ -98,7 +98,7 @@ const columnsUserProgress = [
   { key: 'firstNumber', label: 'First Number' },
   { key: 'secondNumber', label: 'Second Number' },
   { key: 'correctAnswer', label: 'Correct Answer' }, // Added to show the expected answer
-  { key: 'userValue', label: 'All Attempts' }, // New column for debugging (all user attempts)
+  { key: 'allAttempts', label: 'All Attempts' }, // New column for debugging (all user attempts)
   { key: 'incorrectAttempts', label: 'Incorrect Attempts' }, // New column to show only incorrect answers
   { key: 'isCorrect', label: 'Correct?' },
   { key: 'timeTakenToAnswerCorrectly', label: 'Time Taken (s)' },

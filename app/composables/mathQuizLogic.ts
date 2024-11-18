@@ -58,16 +58,26 @@ export function useQuiz() {
        score.value = ((endTime - startTime) / 1000).toFixed(2);
        timerRunning.value = false;
  
-       // Collect data
-       const questionData = firstNumber.value.map((num, index) => ({
-         timeStamp: new Date().toISOString(),
-         firstNumber: num,
-         secondNumber: secondNumber.value[index],
-         timeTakenToAnswerCorrectly: correctTimes.value[index],
-         userValue: summary.value[index].attempts.length === 1 ? null : summary.value[index].attempts.attempts.slice(0, -1),
-         isCorrect: inputStates.value[index] === 'correct',
-       }));
+      // Collect data
+      const questionData = firstNumber.value.map((num, index) => {
+        const attempts = summary.value[index].attempts;
+        const incorrectAttempts = attempts.length === 1 ? [] : attempts.slice(0, -1);
+        const correctAnswer = num + secondNumber.value[index]; 
 
+
+        return {
+          timeStamp: new Date().toISOString(),
+          firstNumber: num,
+          correctAnswer: correctAnswer,
+          secondNumber: secondNumber.value[index],
+          timeTakenToAnswerCorrectly: correctTimes.value[index],
+          allAttempts: attempts,
+          incorrectAttempts: incorrectAttempts.length > 0 ? `[${incorrectAttempts.join(', ')}]` : "",
+          isCorrect: incorrectAttempts.length === 0 ? 'Yes' : 'No',
+        };
+      });
+      
+       console.log("f1:", questionData)
  
        // Store data locally
        userPerformanceData.value.push({
@@ -156,11 +166,6 @@ export function useQuiz() {
       const correctAnswer = sumArray.value[index];
       const incorrectAttempts = rawAttempts.filter((a) => a !== correctAnswer);
 
-      // console.log('Attempts')
-      // console.log(attempts)
-      // console.log('rawAttempts: ', rawAttempts.join(', '))
-      // console.log('Attempts: ', attempts.join(', '))
-
   
       return {
         firstNumber: firstNumber.value[index],
@@ -168,7 +173,6 @@ export function useQuiz() {
         correctAnswer,
         // Display raw attempts
         allAttempts: rawAttempts.join(', '),
-        // allAttempts: attempts.join(', '),
         // Show incorrect attempts
         incorrectAttempts: incorrectAttempts.join(', ') || 'None',
         // Determine correctness
