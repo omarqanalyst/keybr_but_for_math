@@ -2,6 +2,10 @@
 import { ref, computed } from 'vue';
 
 export function useQuiz() {
+  // Reactive variables for quiz settings
+  const numberOfQuestions = ref(10);
+  const numberOfDigits = ref(1); // 1 for single-digit numbers by default
+  
   // State variables
   const firstNumber = ref<number[]>([]);
   const secondNumber = ref<number[]>([]);
@@ -25,12 +29,18 @@ export function useQuiz() {
 
   // Initialize function
   const initializeQuiz = () => {
-    firstNumber.value = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
-    secondNumber.value = Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
-    userInputs.value = Array(10).fill('');
-    inputStates.value = Array(10).fill('');
-    attemptsArray.value = Array.from({ length: 10 }, () => []);
-    correctTimes.value = Array(10).fill(null);
+    const maxNumber = Math.pow(10, numberOfDigits.value) - 1;
+
+    firstNumber.value = Array.from({ length: numberOfQuestions.value }, () =>
+      Math.floor(Math.random() * (maxNumber + 1))
+    );
+    secondNumber.value = Array.from({ length: numberOfQuestions.value }, () =>
+      Math.floor(Math.random() * (maxNumber + 1))
+    );
+    userInputs.value = Array(numberOfQuestions.value).fill('');
+    inputStates.value = Array(numberOfQuestions.value).fill('');
+    attemptsArray.value = Array.from({ length: numberOfQuestions.value }, () => []);
+    correctTimes.value = Array(numberOfQuestions.value).fill(null);
     startTime = null;
     timerRunning.value = false;
     lastCorrectTime.value = null;
@@ -217,5 +227,7 @@ export function useQuiz() {
     initializeQuiz,
     userPerformanceData, // Return this to access it in your component
     stopTimer,
+    numberOfQuestions,
+    numberOfDigits,
   };
 }

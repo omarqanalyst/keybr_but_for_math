@@ -4,7 +4,11 @@
       <div class="flex justify-center">
         <!-- Card Container -->
         <div class="w-1/3">
+
+          
           <UPageCard title="Start quiz"/>
+          
+
           <div class="mt-4">
             <UButton @click="refreshQuiz" class="mt-4">Refresh</UButton>
             <div
@@ -43,14 +47,29 @@
 
             <h6 class="mt-6 text-lg font-semibold">Incorrect Questions: Unique Ones Digits</h6>
             <UTable :columns="columnsUniqueOnesDigits" :rows="uniqueOnesDigitsWithCounts" />
-          </div>
-          <div v-if="userPerformanceData.length" class="mt-6">
+            <div v-if="userPerformanceData.length" class="mt-6">
             <h3 class="text-lg font-semibold">User Progress</h3>
             <div v-for="(quiz, quizIndex) in userPerformanceData" :key="quizIndex" class="mt-4">
               <h4>Quiz {{ quizIndex + 1 }} - Total Time: {{ quiz.totalTimeTaken }} seconds</h4>
               <UTable :columns="columnsUserProgress" :rows="quiz.questions" />
             </div>
           </div>
+          </div>
+          
+
+          <UPageCard title="Start Quiz">
+            <!-- Parameters Section -->
+            <div class="mb-4">
+              <label class="block mb-2">Number of Questions:</label>
+              <UInput v-model.number="numberOfQuestions"
+                type="number"
+                min="1"
+                max="100" />
+
+              <label class="block mt-4 mb-2">Maximum Digit Count:</label>
+              <USelect v-model.number="numberOfDigits" :options="digitOptions" />
+            </div>
+          </UPageCard>
         </div>
       </div>
     </UPageBody>
@@ -62,7 +81,10 @@
 import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { mathQuizLogic } from '~/composables/mathQuizLogic';
 
+
 const {
+  numberOfQuestions,
+  numberOfDigits,
   firstNumber,
   secondNumber,
   sumArray,
@@ -82,16 +104,18 @@ const {
   stopTimer,
 } = useQuiz();
 
+// New state for user-configurable parameters
+const digitOptions = [
+  { value: 1, label: 'Single Digits (1-9)' },
+  { value: 2, label: 'Tens (1-99)' },
+  { value: 3, label: 'Hundreds (1-999)' },
+  { value: 4, label: 'Thousands (1-9999)' },
+];
+
+
+
 const inputRefs = ref([]);
 
-// const columnsUserProgress = [
-//   { key: 'timeStamp', label: 'Time Stamp' },
-//   { key: 'firstNumber', label: 'First Number' },
-//   { key: 'secondNumber', label: 'Second Number' },
-//   { key: 'userValue', label: 'Your Answer' },
-//   { key: 'isCorrect', label: 'Correct?' },
-//   { key: 'timeTakenToAnswerCorrectly', label: 'Time Taken (s)' },
-// ];
 
 const columnsUserProgress = [
   { key: 'timeStamp', label: 'Time Stamp' },
