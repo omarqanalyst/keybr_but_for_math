@@ -1,5 +1,7 @@
 // composables/useQuiz.ts
 import { ref, computed } from 'vue';
+import { generateNumbers } from '../utils/numberGenerator';
+
 
 export function useQuiz() {
   // Reactive variables for quiz settings
@@ -44,14 +46,23 @@ export function useQuiz() {
       ? Math.pow(10, numberOfDigits.value - 1)
       : 0;
     let maxNumber = Math.pow(10, numberOfDigits.value) - 1;
-
+  
     // For single-digit numbers, ensure minNumber is 1
     if (numberOfDigits.value === 1) {
       minNumber = 1;
     }
-
-    firstNumber.value = generateNumbers(minNumber, maxNumber);
-    secondNumber.value = generateNumbers(minNumber, maxNumber);
+  
+    const quizSettings = {
+      min: minNumber,
+      max: maxNumber,
+      exactDigitCount: exactDigitCount.value,
+      excludeEndingZero: excludeEndingZero.value,
+      selectedEndingDigits: selectedEndingDigits.value,
+      count: numberOfQuestions.value,
+    };
+  
+    firstNumber.value = generateNumbers(quizSettings);
+    secondNumber.value = generateNumbers(quizSettings);
     userInputs.value = Array(numberOfQuestions.value).fill('');
     inputStates.value = Array(numberOfQuestions.value).fill('');
     attemptsArray.value = Array.from({ length: numberOfQuestions.value }, () => []);
@@ -62,33 +73,6 @@ export function useQuiz() {
     score.value = null;
   };
 
-  // Function to generate numbers based on the parameters
-  const generateNumbers = (min: number, max: number): number[] => {
-    const numbers: number[] = [];
-    while (numbers.length < numberOfQuestions.value) {
-      let num = Math.floor(Math.random() * (max - min + 1)) + min;
-
-      // If exactDigitCount is true, ensure num has the exact number of digits
-      if (exactDigitCount.value && num.toString().length !== numberOfDigits.value) {
-        continue;
-      }
-
-      // If excludeEndingZero is true, ensure num does not end with zero
-      if (excludeEndingZero.value && num % 10 === 0) {
-        continue;
-      }
-      // If selectedEndingDigits is not empty, ensure num ends with one of the selected digits
-      if (selectedEndingDigits.value.length > 0) {
-        const lastDigit = num % 10;
-        if (!selectedEndingDigits.value.includes(lastDigit)) {
-          continue;
-        }
-      }
-
-      numbers.push(num);
-    }
-    return numbers;
-  };
 
   // Call initializeQuiz when the composable is first used
   initializeQuiz();
